@@ -1,0 +1,17 @@
+[Unit]
+Description=twitter video download Server
+After=network.target
+
+[Service]
+WorkingDirectory=/data/server/python/twitter_video_download   # 修改为实际目录
+User=root   # 修改
+Group=root   # 修改
+Type=simple
+ExecStart=/usr/bin/python3 /data/server/python/twitter_video_download/tvd_bot.py # 修改
+ExecStop=/bin/kill -s HUP $MAINPID
+Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
+RestartPreventExitStatus=23
+
+[Install]
+WantedBy=default.target
