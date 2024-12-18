@@ -17,9 +17,9 @@ import bs4
 import requests
 from minio import Minio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, \
+    filters
 from tqdm import tqdm
-
 
 # 配置日志
 # 1.基本配置方式
@@ -40,7 +40,7 @@ console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.DEBUG)  # 设置 console handler 的日志级别为 INFO
 
 # 创建 file handler
-file_handler = logging.FileHandler("tvd_bot.log")
+file_handler = logging.FileHandler("tvd_bot.log", encoding="utf-8")
 file_handler.setLevel(logging.INFO)  # 设置 file handler 的日志级别为 DEBUG
 
 # 创建 formatter
@@ -113,9 +113,8 @@ def query_ip_info(ip_address):
 def is_valid_url(url):
     # 正则表达式用于匹配 URL
     url_pattern = re.compile(
-        r'^(https?:\/\/)?'  # http:// 或 https:// (可选)
-        r'([\da-z\.-]+)\.([a-z\.]{2,6})'  # 域名
-        r'([\/\w\.-]*)*\/?$'  # 路径 (可选)
+        r'^(https?://)?'  # http:// 或 https:// (可选)
+        r'(([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})'  # 域名
     )
     return re.match(url_pattern, url) is not None
 
@@ -141,7 +140,13 @@ def fetch_video_links(twitter_post_url):
     api_request_url = f"https://twitsave.com/info?url={twitter_post_url}"
     response = requests.get(api_request_url)
     page_content = bs4.BeautifulSoup(response.text, "html.parser")
+    video_desc_tag = page_content.find("div", class_="leading-tight")
     tags = page_content.find_all("div", class_="origin-top-right")
+
+    if video_desc_tag is not None:
+        a_link = video_desc_tag.find("a").text.strip()
+        p_content = video_desc_tag.find("p").text.strip()
+        logger.info(f"Video description: {p_content}")
 
     if tags is None or len(tags) == 0:
         raise Exception("Sorry, we could not find any video on this url.")
@@ -149,13 +154,18 @@ def fetch_video_links(twitter_post_url):
     download_section = tags[0]
     quality_links = download_section.find_all("a")
 
+    video_info = {}
+    video_info["post_url"] = twitter_post_url
+    video_info["video_desc"] = f'<a href="{twitter_post_url}">🔗{a_link}</a>\n\n' + p_content
+
     video_links = []
     for link in quality_links:
         quality = link.text.strip()
         url = link.get("href")
         video_links.append((quality, url))
 
-    return video_links
+    video_info["video_links"] = video_links
+    return video_info
 
 
 # 上传到 MinIO
@@ -196,7 +206,11 @@ async def ipinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text("输入的不是一个有效的IP地址，请检查后重试。")
     else:
-        await update.message.reply_text("请提供一个IP地址，例如：/ipinfo 35.223.238.178")
+        await update.message.reply_text("请提供一个IP地址，例如：/ip 35.223.238.178")
+
+# 处理 /who 命令
+async def who(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Hello, " + update.message.from_user.first_name + " your id is " + str(update.message.from_user.id))
 
 # 处理用户发送的链接
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -208,23 +222,27 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     try:
-        video_links = fetch_video_links(twitter_post_url)
-        print(video_links)
-        if not video_links:
+        video_info = fetch_video_links(twitter_post_url)
+
+        if not video_info:
             await update.message.reply_text("未找到可用视频链接，请检查输入的 URL 是否正确！")
             return
 
         # 创建视频质量选择按钮，使用短标识符映射链接
         keyboard = []
-        for quality, url in video_links:
-            quality = quality.replace('\n', ':')
+        for quality, url in video_info["video_links"]:
+            quality = quality.replace('\n', ':').replace('Video:', '')
+            quality = re.sub(r'\s+', ' ', quality)
             # 生成短标识符
             short_id = hashlib.md5(url.encode()).hexdigest()
             video_link_storage[short_id] = url  # 存储到全局字典
-            keyboard.append([InlineKeyboardButton(re.sub(r'\s+', ' ', quality), callback_data=short_id)])
+            video_link_storage[short_id + '_quality'] = quality
+            video_link_storage[short_id + "_desc"] = video_info["video_desc"]
+            keyboard.append([InlineKeyboardButton(quality, callback_data=short_id)])
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text("请选择视频质量：", reply_markup=reply_markup)
     except Exception as e:
+        logger.error(f"处理链接时出错：{str(e)}")
         await update.message.reply_text(f"处理链接时出错：{str(e)}")
 
 # 处理视频质量选择
@@ -234,13 +252,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     short_id = query.data
     video_url = video_link_storage.get(short_id)  # 根据短标识符获取真实链接
+    video_quality = video_link_storage.get(short_id + "_quality")
+    video_desc = video_link_storage.get(short_id + "_desc")
     if not video_url:
         await query.edit_message_text("无法找到视频链接，请重试。")
         return
 
-    selected_quality = query.message.reply_markup.inline_keyboard[0][0].text  # 获取视频质量文本
-
-    await query.edit_message_text(f"正在下载视频 ({selected_quality})...")
+    await query.edit_message_text(f"正在下载视频 ({video_quality})...")
 
     # 下载视频
     timestamp = int(time.time())
@@ -256,11 +274,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await query.message.reply_text("视频下载完成，正在发送给您...")
             with open(download_path, "rb") as video_file:
-                await query.message.reply_document(video_file)
+                await query.message.reply_document(video_file, caption=f"{video_desc}", parse_mode="HTML")
 
         os.remove(download_path)
     except Exception as e:
+        logger.error(f"视频下载或发送时出错：{str(e)}")
         await query.message.reply_text(f"视频下载或发送时出错：{str(e)}")
+
 
 # 创建应用并注册处理器
 def main():
@@ -271,6 +291,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("bye", bye))
     app.add_handler(CommandHandler("ip", ipinfo))
+    app.add_handler(CommandHandler("who", who))
     # ~filters.COMMAND filters 是过滤，~ 是取反，就是所有非指令的消息
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_handler(CallbackQueryHandler(button_handler))
