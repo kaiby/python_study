@@ -51,7 +51,7 @@ def extract_zip(zip_path, extract_to):
         return False, f"解压失败: {str(e)}"
 
 
-@app.route('/')
+@app.route('/protohub')
 def index():
     """主页面"""
     return render_template('index.html')
