@@ -1,6 +1,19 @@
 """
 tvd_bot - twitter video download bot
 
+# 安装虚拟环境工具
+apt update
+apt install python3-venv -y
+
+# 创建名为 venv 的虚拟环境
+python3 -m venv tvd_env
+
+# 激活虚拟环境
+source tvd_env/bin/activate
+
+# 安装三方库
+pip install tqdm python-telegram-bot requests beautifulsoup4
+
 Author: kaiby
 Date: 2024/11/27 18:07
 """
@@ -40,7 +53,7 @@ console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.DEBUG)  # 设置 console handler 的日志级别为 INFO
 
 # 创建 file handler
-file_handler = logging.FileHandler("tvd_bot.log", encoding="utf-8")
+file_handler = logging.FileHandler("logs/tvd_bot.log", encoding="utf-8")
 file_handler.setLevel(logging.INFO)  # 设置 file handler 的日志级别为 DEBUG
 
 # 创建 formatter
@@ -285,8 +298,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # 创建应用并注册处理器
 def main():
     proxy_url = "socks5://127.0.0.1:1080"
-    #proxy_url = "socks5://admin:z5Qt18MrwX@192.168.59.59:31408"
+    #proxy_url = "socks5://admin:gGfn3CMl2j06M0BYbe@192.168.1.100:18888"
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).proxy(proxy_url).get_updates_proxy(proxy_url).build()
+    #app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("bye", bye))

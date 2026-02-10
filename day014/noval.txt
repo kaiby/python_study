@@ -1,0 +1,4 @@
+Tom 37.5
+Jerry 36.5
+Lily 36.3
+Emmy 38
