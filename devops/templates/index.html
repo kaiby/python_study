@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML原型文件上传工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .drop-zone {
+            border: 3px dashed #667eea;
+            border-radius: 8px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9ff;
+        }
+
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: #764ba2;
+            background: #f0f2ff;
+            transform: scale(1.02);
+        }
+
+        .drop-zone-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .drop-zone-text {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .drop-zone-hint {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .project-name-input {
+            margin-top: 20px;
+            padding: 12px;
+            width: 100%;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .project-name-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .upload-btn {
+            margin-top: 20px;
+            padding: 12px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: none;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9em;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .projects-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .projects-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .projects-title {
+            font-size: 1.5em;
+            color: #333;
+        }
+
+        .refresh-btn {
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #764ba2;
+        }
+
+        .projects-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .project-card {
+            background: #f8f9ff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .project-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .project-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .project-info {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .btn-visit {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-visit:hover {
+            background: #5568d3;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .upload-section {
+                padding: 20px;
+            }
+
+            .projects-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 HTML原型文件上传工具</h1>
+
+        <!-- 上传区域 -->
+        <div class="upload-section">
+            <div class="drop-zone" id="dropZone">
+                <div class="drop-zone-icon">📁</div>
+                <div class="drop-zone-text">拖拽ZIP文件到这里，或点击选择文件</div>
+                <div class="drop-zone-hint">支持的文件类型: .zip (最大100MB)</div>
+            </div>
+            <input type="file" id="fileInput" class="file-input" accept=".zip">
+            
+            <input type="text" id="projectName" class="project-name-input" 
+                   placeholder="项目名称（可选，留空则使用zip文件名）" style="display:none;">
+            
+            <button id="uploadBtn" class="upload-btn">上传并解压</button>
+
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill">0%</div>
+                </div>
+            </div>
+
+            <div class="message" id="message"></div>
+        </div>
+
+        <!-- 项目列表 -->
+        <div class="projects-section">
+            <div class="projects-header">
+                <h2 class="projects-title">已部署项目</h2>
+                <button class="refresh-btn" onclick="loadProjects()">🔄 刷新</button>
+            </div>
+            <div class="projects-list" id="projectsList">
+                <div class="empty-state">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const projectNameInput = document.getElementById('projectName');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const message = document.getElementById('message');
+        let selectedFile = null;
+
+        // 点击上传区域
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // 文件选择
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        // 拖拽事件
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        // 处理文件
+        function handleFile(file) {
+            if (!file.name.endsWith('.zip')) {
+                showMessage('请选择.zip文件', 'error');
+                return;
+            }
+
+            if (file.size > 100 * 1024 * 1024) {
+                showMessage('文件大小不能超过100MB', 'error');
+                return;
+            }
+
+            selectedFile = file;
+            dropZone.querySelector('.drop-zone-text').textContent = `已选择: ${file.name}`;
+            dropZone.querySelector('.drop-zone-hint').textContent = `大小: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+            projectNameInput.style.display = 'block';
+            uploadBtn.style.display = 'block';
+            message.style.display = 'none';
+        }
+
+        // 上传文件
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) {
+                showMessage('请先选择文件', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            
+            const projectName = projectNameInput.value.trim();
+            if (projectName) {
+                formData.append('project_name', projectName);
+            }
+
+            uploadBtn.disabled = true;
+            progressContainer.style.display = 'block';
+            message.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    progressFill.style.width = '100%';
+                    progressFill.textContent = '100%';
+                    
+                    let successMsg = `✅ ${result.message}<br>项目: ${result.project_name}<br>访问地址: <a href="${result.project_url}" target="_blank">${result.project_url}</a>`;
+                    if (result.backup_message) {
+                        successMsg += `<br>⚠️ ${result.backup_message}`;
+                    }
+                    showMessage(successMsg, 'success');
+                    
+                    // 重置表单
+                    setTimeout(() => {
+                        resetForm();
+                        loadProjects();
+                    }, 2000);
+                } else {
+                    showMessage(`❌ ${result.message}`, 'error');
+                    uploadBtn.disabled = false;
+                }
+            } catch (error) {
+                showMessage(`❌ 上传失败: ${error.message}`, 'error');
+                uploadBtn.disabled = false;
+            }
+        });
+
+        // 重置表单
+        function resetForm() {
+            selectedFile = null;
+            fileInput.value = '';
+            projectNameInput.value = '';
+            projectNameInput.style.display = 'none';
+            uploadBtn.style.display = 'none';
+            uploadBtn.disabled = false;
+            progressContainer.style.display = 'none';
+            progressFill.style.width = '0%';
+            progressFill.textContent = '0%';
+            dropZone.querySelector('.drop-zone-text').textContent = '拖拽ZIP文件到这里，或点击选择文件';
+            dropZone.querySelector('.drop-zone-hint').textContent = '支持的文件类型: .zip (最大100MB)';
+        }
+
+        // 显示消息
+        function showMessage(text, type) {
+            message.innerHTML = text;
+            message.className = `message ${type}`;
+            message.style.display = 'block';
+        }
+
+        // 加载项目列表
+        async function loadProjects() {
+            const projectsList = document.getElementById('projectsList');
+            projectsList.innerHTML = '<div class="empty-state">加载中...</div>';
+
+            try {
+                const response = await fetch('/api/projects');
+                const result = await response.json();
+
+                if (result.success) {
+                    if (result.projects.length === 0) {
+                        projectsList.innerHTML = '<div class="empty-state">暂无项目</div>';
+                    } else {
+                        projectsList.innerHTML = result.projects.map(project => `
+                            <div class="project-card">
+                                <div class="project-name">${project.name}</div>
+                                <div class="project-info">
+                                    修改时间: ${project.modified}
+                                </div>
+                                <div class="project-actions">
+                                    <button class="btn btn-visit" onclick="window.open('${project.url}', '_blank')">
+                                        🔗 访问
+                                    </button>
+                                    <button class="btn btn-delete" onclick="deleteProject('${project.name}')">
+                                        🗑️ 删除
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                projectsList.innerHTML = '<div class="empty-state">加载失败</div>';
+            }
+        }
+
+        // 删除项目
+        async function deleteProject(projectName) {
+            if (!confirm(`确定要删除项目 "${projectName}" 吗？此操作不可恢复！`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/delete/${projectName}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage(`✅ ${result.message}`, 'success');
+                    loadProjects();
+                } else {
+                    showMessage(`❌ ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ 删除失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 页面加载时获取项目列表
+        window.addEventListener('load', loadProjects);
+    </script>
+</body>
+</html>

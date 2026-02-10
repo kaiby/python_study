@@ -1,0 +1,30 @@
+[Unit]
+Description=HTML Prototype Upload Service
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/path/to/html-uploader
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+Environment="NGINX_ROOT=/usr/share/nginx/html"
+Environment="SECRET_KEY=your-secret-key-here"
+Environment="FLASK_ENV=production"
+
+# 使用gunicorn启动
+ExecStart=/usr/local/bin/gunicorn -c gunicorn_config.py app:app
+
+# 重启策略
+Restart=always
+RestartSec=10
+
+# 日志
+StandardOutput=journal
+StandardError=journal
+
+# 限制
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
