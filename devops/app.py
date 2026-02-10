@@ -19,6 +19,7 @@ UPLOAD_FOLDER = 'D:\\temp\\test'  # 临时上传目录
 WORKSPACE_ROOT = 'D:\\temp\\test'  # 工作空间根目录，请根据实际修改
 MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
 ALLOWED_EXTENSIONS = {'zip'}
+AUTO_BACKUP = False  # 是否自动备份同名项目，False则直接覆盖
 
 # 创建必要的目录
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -54,6 +55,20 @@ def extract_zip(zip_path, extract_to):
 def index():
     """主页面"""
     return render_template('index.html')
+
+
+@app.route('/api/config', methods=['GET'])
+def get_config():
+    """获取当前配置"""
+    return jsonify({
+        'success': True,
+        'config': {
+            'workspace_root': WORKSPACE_ROOT,
+            'max_file_size': MAX_FILE_SIZE,
+            'max_file_size_mb': MAX_FILE_SIZE // (1024 * 1024),
+            'auto_backup': AUTO_BACKUP
+        }
+    })
 
 
 @app.route('/api/workspaces', methods=['GET'])
@@ -219,13 +234,18 @@ def upload_file():
             base_name = os.path.splitext(filename)[0]
             extract_dir = os.path.join(workspace_path, base_name)
         
-        # 如果目录已存在，先备份
+        # 如果目录已存在，根据配置决定备份或覆盖
+        backup_message = None
         if os.path.exists(extract_dir):
-            backup_dir = f"{extract_dir}_backup_{timestamp}"
-            shutil.move(extract_dir, backup_dir)
-            backup_message = f"原目录已备份至: {os.path.basename(backup_dir)}"
-        else:
-            backup_message = None
+            if AUTO_BACKUP:
+                # 备份模式：移动到备份目录
+                backup_dir = f"{extract_dir}_backup_{timestamp}"
+                shutil.move(extract_dir, backup_dir)
+                backup_message = f"原目录已备份至: {os.path.basename(backup_dir)}"
+            else:
+                # 覆盖模式：直接删除原目录
+                shutil.rmtree(extract_dir)
+                backup_message = "已覆盖原项目"
         
         # 创建目标目录
         os.makedirs(extract_dir, exist_ok=True)
@@ -234,7 +254,7 @@ def upload_file():
         success, message = extract_zip(temp_zip_path, extract_dir)
         
         # 删除临时zip文件
-        # os.remove(temp_zip_path)
+        os.remove(temp_zip_path)
         
         if success:
             project_url = f"/{workspace_name}/{os.path.basename(extract_dir)}/"

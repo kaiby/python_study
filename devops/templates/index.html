@@ -166,6 +166,39 @@
             font-weight: 500;
         }
 
+        .config-info {
+            background: #f8f9ff;
+            border-left: 4px solid #667eea;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #666;
+            border-radius: 4px;
+        }
+
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+
+        .config-label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .config-value {
+            color: #667eea;
+        }
+
+        .config-value.backup-enabled {
+            color: #28a745;
+        }
+
+        .config-value.backup-disabled {
+            color: #dc3545;
+        }
+
         .drop-zone {
             border: 3px dashed #667eea;
             border-radius: 8px;
@@ -528,6 +561,13 @@
                         请先选择工作空间
                     </div>
 
+                    <div class="config-info" id="configInfo">
+                        <div class="config-item">
+                            <span class="config-label">备份模式:</span>
+                            <span class="config-value" id="backupMode">加载中...</span>
+                        </div>
+                    </div>
+
                     <div class="drop-zone disabled" id="dropZone">
                         <div class="drop-zone-icon">📁</div>
                         <div class="drop-zone-text">拖拽ZIP文件到这里，或点击选择文件</div>
@@ -587,6 +627,27 @@
         
         let selectedFile = null;
         let currentWorkspace = null;
+
+        // 加载配置信息
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const result = await response.json();
+
+                if (result.success) {
+                    const backupMode = document.getElementById('backupMode');
+                    if (result.config.auto_backup) {
+                        backupMode.textContent = '✅ 启用（同名项目将被备份）';
+                        backupMode.className = 'config-value backup-enabled';
+                    } else {
+                        backupMode.textContent = '⚠️ 禁用（同名项目将被覆盖）';
+                        backupMode.className = 'config-value backup-disabled';
+                    }
+                }
+            } catch (error) {
+                console.error('加载配置失败:', error);
+            }
+        }
 
         // 加载工作空间列表
         async function loadWorkspaces() {
@@ -936,8 +997,9 @@
             }
         });
 
-        // 页面加载时获取工作空间列表
+        // 页面加载时获取工作空间列表和配置
         window.addEventListener('load', () => {
+            loadConfig();
             loadWorkspaces();
         });
     </script>

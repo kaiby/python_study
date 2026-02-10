@@ -58,12 +58,19 @@ html-uploader/
 ## 🔧 常见问题
 
 ### Q1: 如何修改上传大小限制？
-编辑 `app.py` 第19行:
+编辑 `app.py` 第20行:
 ```python
 MAX_FILE_SIZE = 200 * 1024 * 1024  # 改为200MB
 ```
 
-### Q2: 如何查看nginx目录位置？
+### Q2: 如何配置备份策略？
+编辑 `app.py` 第21行:
+```python
+AUTO_BACKUP = True   # 备份旧项目（默认）
+AUTO_BACKUP = False  # 直接覆盖，不备份
+```
+
+### Q3: 如何查看nginx目录位置？
 ```bash
 # Ubuntu/Debian
 /var/www/html 或 /usr/share/nginx/html
@@ -75,7 +82,7 @@ MAX_FILE_SIZE = 200 * 1024 * 1024  # 改为200MB
 nginx -T | grep "root"
 ```
 
-### Q3: 权限问题怎么办？
+### Q4: 权限问题怎么办？
 ```bash
 # 给当前用户授权
 sudo chown -R $USER:$USER /usr/share/nginx/html
@@ -84,7 +91,7 @@ sudo chown -R $USER:$USER /usr/share/nginx/html
 sudo chown -R www-data:www-data /usr/share/nginx/html
 ```
 
-### Q4: 如何在生产环境部署？
+### Q5: 如何在生产环境部署？
 请查看 `DEPLOYMENT.md` 文档，包含完整的生产环境部署步骤。
 
 ---

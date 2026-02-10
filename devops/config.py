@@ -8,14 +8,17 @@ class Config:
     # 上传临时目录
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', '/tmp/uploads')
     
-    # Nginx静态文件根目录（重要：根据实际情况修改）
-    NGINX_ROOT = os.environ.get('NGINX_ROOT', '/usr/share/nginx/html')
+    # 工作空间根目录（重要：根据实际情况修改）
+    WORKSPACE_ROOT = os.environ.get('WORKSPACE_ROOT', '/usr/share/nginx/html')
     
     # 最大文件大小（字节）
     MAX_FILE_SIZE = int(os.environ.get('MAX_FILE_SIZE', 100 * 1024 * 1024))  # 100MB
     
     # 允许的文件扩展名
     ALLOWED_EXTENSIONS = {'zip'}
+    
+    # 自动备份配置：True=备份旧项目，False=直接覆盖
+    AUTO_BACKUP = os.environ.get('AUTO_BACKUP', 'True').lower() in ('true', '1', 'yes')
     
     # Flask配置
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')

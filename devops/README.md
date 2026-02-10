@@ -161,6 +161,35 @@ server {
 }
 ```
 
+## 配置选项
+
+可以通过修改 `app.py` 文件来调整以下配置：
+
+| 配置项 | 默认值 | 说明 |
+|-------|--------|------|
+| WORKSPACE_ROOT | /usr/share/nginx/html | 工作空间根目录 |
+| UPLOAD_FOLDER | /tmp/uploads | 临时上传目录 |
+| MAX_FILE_SIZE | 100MB | 最大文件大小限制 |
+| AUTO_BACKUP | True | 是否自动备份同名项目 |
+
+### 备份策略配置
+
+**AUTO_BACKUP = True（默认）**
+- 上传同名项目时，旧项目会被重命名为 `项目名_backup_时间戳`
+- 可以保留项目历史版本
+- 需要手动清理备份文件
+
+**AUTO_BACKUP = False**
+- 上传同名项目时，直接覆盖旧项目
+- 不保留历史版本
+- 节省磁盘空间
+
+修改方式：
+```python
+# 在 app.py 第21行
+AUTO_BACKUP = False  # 改为False则直接覆盖，不备份
+```
+
 ## 注意事项
 
 1. **安全性**: 
