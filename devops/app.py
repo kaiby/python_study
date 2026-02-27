@@ -5,12 +5,14 @@ HTML原型文件上传解压工具
 支持拖拽上传zip文件到指定nginx目录
 """
 
+import os
+import re
+import shutil
+import zipfile
+from datetime import datetime
+
 from flask import Flask, request, render_template, jsonify
 from werkzeug.utils import secure_filename
-import os
-import zipfile
-import shutil
-from datetime import datetime
 
 app = Flask(__name__)
 
@@ -34,7 +36,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def extract_zip(zip_path, extract_to):
+def extract_zip_old(zip_path, extract_to):
     """解压zip文件到指定目录"""
     try:
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
@@ -50,6 +52,57 @@ def extract_zip(zip_path, extract_to):
     except Exception as e:
         return False, f"解压失败: {str(e)}"
 
+def extract_zip(zip_path, extract_to):
+    """解压zip文件到指定目录，自动跳过zip包内第一级文件夹"""
+    try:
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            if zip_ref.testzip() is not None:
+                return False, "ZIP文件已损坏"
+
+            # 修复文件名编码
+            def fix_filename(item):
+                if item.flag_bits & 0x800:
+                    return item.filename
+                try:
+                    return item.filename.encode('cp437').decode('gbk')
+                except (UnicodeDecodeError, UnicodeEncodeError):
+                    return item.filename
+
+            items = zip_ref.infolist()
+            filenames = [fix_filename(i) for i in items]
+
+            # 检测第一级是否只有一个文件夹
+            top_levels = set(f.split('/')[0] for f in filenames)
+            first_parts = [f.split('/') for f in filenames]
+            has_single_top_folder = (
+                len(top_levels) == 1
+                and all(len(p) > 1 for p in first_parts)  # 所有文件都在该文件夹下
+            )
+            strip_prefix = (top_levels.pop() + '/') if has_single_top_folder else ''
+
+            for item, filename in zip(items, filenames):
+                # 去掉第一级目录
+                relative = filename[len(strip_prefix):] if strip_prefix else filename
+                if not relative:  # 跳过顶层文件夹本身
+                    continue
+
+                # 防止路径穿越
+                target_path = os.path.realpath(os.path.join(extract_to, relative))
+                if not target_path.startswith(os.path.realpath(extract_to)):
+                    continue
+
+                if item.is_dir():
+                    os.makedirs(target_path, exist_ok=True)
+                else:
+                    os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                    with zip_ref.open(item) as src, open(target_path, 'wb') as dst:
+                        dst.write(src.read())
+
+            return True, "解压成功"
+    except zipfile.BadZipFile:
+        return False, "无效的ZIP文件"
+    except Exception as e:
+        return False, f"解压失败: {str(e)}"
 
 @app.route('/protohub')
 def index():
@@ -70,6 +123,12 @@ def get_config():
         }
     })
 
+def secure_filename_cn(filename):
+    """类似werkzeug的secure_filename，但保留中文字符"""
+    # 移除路径分隔符等危险字符，保留中文
+    filename = re.sub(r'[/\\:*?"<>|]', '_', filename)
+    filename = filename.strip('. ')
+    return filename or 'unnamed'
 
 @app.route('/api/workspaces', methods=['GET'])
 def list_workspaces():
@@ -151,7 +210,7 @@ def list_projects():
         
         if workspace_name:
             # 列出指定工作空间的项目
-            workspace_path = os.path.join(WORKSPACE_ROOT, secure_filename(workspace_name))
+            workspace_path = os.path.join(WORKSPACE_ROOT, secure_filename_cn(workspace_name))
             if os.path.exists(workspace_path) and os.path.isdir(workspace_path):
                 for item in os.listdir(workspace_path):
                     item_path = os.path.join(workspace_path, item)
@@ -209,7 +268,7 @@ def upload_file():
         if not workspace_name:
             return jsonify({'success': False, 'message': '请选择工作空间'}), 400
         
-        workspace_name = secure_filename(workspace_name)
+        workspace_name = secure_filename_cn(workspace_name)
         workspace_path = os.path.join(WORKSPACE_ROOT, workspace_name)
         
         # 确保工作空间存在
@@ -220,7 +279,7 @@ def upload_file():
         project_name = request.form.get('project_name', '').strip()
         
         # 保存上传的文件
-        filename = secure_filename(file.filename)
+        filename = secure_filename_cn(file.filename)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         temp_zip_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{timestamp}_{filename}')
         file.save(temp_zip_path)
@@ -228,7 +287,7 @@ def upload_file():
         # 确定解压目标目录
         if project_name:
             # 使用指定的项目名称
-            extract_dir = os.path.join(workspace_path, secure_filename(project_name))
+            extract_dir = os.path.join(workspace_path, secure_filename_cn(project_name))
         else:
             # 使用zip文件名（去掉.zip后缀）
             base_name = os.path.splitext(filename)[0]
